@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { setupAudioStorage } from "@/utils/setupStorage";
 import { UserButton, useSession } from "@clerk/nextjs";
-import { updateUserInBackend, fetchUserData } from "@/utils/userApi";
+import { fetchUserData } from "@/utils/userApi";
 import Link from "next/link";
 import Level from "./components/Level";
 import { BsFillShieldFill, BsHeartFill } from "react-icons/bs";
@@ -14,19 +14,20 @@ import { AudioRecorder } from "@/components/AudioRecorder";
 
 const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
+interface UserData {
+  name: string;
+  streak: number;
+  level_completed: number;
+}
+
 export default function Dashboard() {
-  const { session, isLoaded, isSignedIn } = useSession();
+  const { session } = useSession();
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string>("");
-  const [userUpdateAttempted, setUserUpdateAttempted] = useState(false);
-  const [userData, setUserData] = useState<{
-    name: string;
-    streak: number;
-    level_completed: number;
-  } | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   useEffect(() => {
     setupAudioStorage().then(({ success, error }) => {
@@ -38,48 +39,43 @@ export default function Dashboard() {
 
   useEffect(() => {
     const updateUser = async () => {
-      console.log("Dashboard state:", {
-        isLoaded,
-        isSignedIn,
-        hasSession: !!session,
-      });
-
-      if (!isLoaded) {
-        console.log("Clerk is still loading...");
-        return;
-      }
-
-      if (!isSignedIn) {
-        console.log("User is not signed in");
-        return;
-      }
-
-      if (!session) {
-        console.log("No session available");
-        return;
-      }
-
-      if (userUpdateAttempted) {
-        console.log("User update already attempted");
-        return;
-      }
+      if (!session?.user) return;
 
       try {
-        console.log("Attempting to update user with session ID:", session.id);
-        await updateUserInBackend(session);
-        console.log("User update successful");
-        setUserUpdateAttempted(true);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API}/api/user`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              uuid: session.user.id,
+              name:
+                session.user.fullName ||
+                `${session.user.firstName || ""} ${
+                  session.user.lastName || ""
+                }`.trim(),
+              email: session.user.emailAddresses[0]?.emailAddress,
+            }),
+          }
+        );
 
-        // Fetch user data after successful update
-        const data = await fetchUserData(session.id);
+        if (!response.ok) {
+          console.error("Failed to create user in backend");
+          return;
+        }
+
+        const data = await fetchUserData(session.user.id);
         setUserData(data);
-      } catch (error) {
-        console.error("Failed to update user:", error);
+      } catch (err) {
+        const error = err as Error;
+        console.error("Error creating/fetching user:", error.message);
       }
     };
 
     updateUser();
-  }, [session, isLoaded, isSignedIn, userUpdateAttempted]);
+  }, [session]);
 
   const userName =
     userData?.name ||
