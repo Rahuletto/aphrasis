@@ -43,6 +43,10 @@
   animation: gradient 2s ease-in-out infinite;
 }
 
+.animate-padding {
+  animation: padding 2s ease-in-out infinite;
+}
+
 :root {
 
   --background: #ffffff;
@@ -82,6 +86,23 @@
   }
   100% {
     rotate: 360deg;
+  }
+}
+@keyframes padding {
+  0% {
+    width: 72px;
+    transform: scale(1);
+    transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  50% {
+    width: 96px;
+    transform: scale(1.1);
+    transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  100% {
+    width: 72px;
+    transform: scale(1);
+    transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
