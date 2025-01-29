@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { setupAudioStorage } from "@/utils/setupStorage";
 import { UserButton, useSession } from "@clerk/nextjs";
-import { updateUserInBackend } from "@/utils/userApi";
+import { updateUserInBackend, fetchUserData } from "@/utils/userApi";
 import Link from "next/link";
 import Level from "./components/Level";
 import { BsFillShieldFill, BsHeartFill } from "react-icons/bs";
@@ -12,6 +12,8 @@ import { FaCheck } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { AudioRecorder } from "@/components/AudioRecorder";
 
+const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
+
 export default function Dashboard() {
   const { session, isLoaded, isSignedIn } = useSession();
   const [isRecording, setIsRecording] = useState(false);
@@ -20,6 +22,11 @@ export default function Dashboard() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string>("");
   const [userUpdateAttempted, setUserUpdateAttempted] = useState(false);
+  const [userData, setUserData] = useState<{
+    name: string;
+    streak: number;
+    level_completed: number;
+  } | null>(null);
 
   useEffect(() => {
     setupAudioStorage().then(({ success, error }) => {
@@ -59,9 +66,13 @@ export default function Dashboard() {
 
       try {
         console.log("Attempting to update user with session ID:", session.id);
-        const response = await updateUserInBackend(session);
-        console.log("User update successful:", response);
+        await updateUserInBackend(session);
+        console.log("User update successful");
         setUserUpdateAttempted(true);
+
+        // Fetch user data after successful update
+        const data = await fetchUserData(session.id);
+        setUserData(data);
       } catch (error) {
         console.error("Failed to update user:", error);
       }
@@ -71,11 +82,36 @@ export default function Dashboard() {
   }, [session, isLoaded, isSignedIn, userUpdateAttempted]);
 
   const userName =
+    userData?.name ||
     session?.user?.fullName ||
     `${session?.user?.firstName || ""} ${
       session?.user?.lastName || ""
     }`.trim() ||
     "User";
+
+  // Get current week data
+  const getCurrentWeekData = () => {
+    const today = new Date();
+    const currentDayIndex = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const streak = userData?.streak || 0;
+
+    return DAYS.map((day, index) => {
+      if (index > currentDayIndex) {
+        // Future days
+        return { day, status: "future" };
+      } else if (index === currentDayIndex) {
+        // Today
+        return { day, status: "today" };
+      } else {
+        // Past days - check against streak
+        const daysAgo = currentDayIndex - index;
+        const hasCompleted = daysAgo <= streak;
+        return { day, status: hasCompleted ? "completed" : "missed" };
+      }
+    });
+  };
+
+  const weekData = getCurrentWeekData();
 
   return isRecording ? (
     <main className="w-screen h-screen bg-[#EAEAEA] flex items-center justify-center">
@@ -106,35 +142,39 @@ export default function Dashboard() {
       <div className="mt-6 rounded-2xl flex flex-col bg-orange-500 px-[18px] py-[16px]">
         <div className="flex items-center gap-2">
           <HiFire className="h-6 w-6 text-white" />
-          <span className="text-2xl font-bold text-white font-expand">12</span>
+          <span className="text-2xl font-bold text-white font-expand">
+            {userData?.streak || 0}
+          </span>
         </div>
         <div className="mt-4 flex justify-between font-expand relative">
           <div className="bg-white rounded-full w-full absolute h-2 m-1" />
-          {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
+          {weekData.map((day, i) => (
             <div key={i} className="flex flex-col items-center">
               <div
                 className={`h-4 w-4 z-10 rounded-full mb-2 text-[10px] flex items-center justify-center ${
-                  i < 4 && i != 2
+                  day.status === "completed"
                     ? "bg-progress-yellow"
-                    : i < 4
+                    : day.status === "today"
+                    ? "bg-white"
+                    : day.status === "missed"
                     ? "bg-white"
                     : "bg-white/0"
                 }`}
               >
-                {i < 4 && i != 2 ? (
+                {day.status === "completed" ? (
                   <FaCheck className="text-white" />
-                ) : i < 4 ? (
+                ) : day.status === "missed" ? (
                   <FaXmark className="text-orange" />
                 ) : null}
               </div>
               <span
                 className={`text-[10px] font-semibold ${
-                  i == 3
+                  day.status === "today"
                     ? "bg-white rounded-full w-4 flex items-center justify-center h-4 text-orange"
                     : "text-white/70"
                 }`}
               >
-                {day}
+                {day.day}
               </span>
             </div>
           ))}
@@ -147,15 +187,15 @@ export default function Dashboard() {
           <div className="flex items-center justify-between w-full px-4 z-10">
             {[
               {
-                level: 3,
+                level: userData?.level_completed || 0,
                 progress: "Done",
               },
               {
-                level: 4,
+                level: (userData?.level_completed || 0) + 1,
                 progress: "Now",
               },
               {
-                level: 5,
+                level: (userData?.level_completed || 0) + 2,
                 progress: "Future",
               },
             ].map((a, i) => (

@@ -2,6 +2,40 @@ import { useSession } from "@clerk/nextjs";
 
 type SessionType = ReturnType<typeof useSession>["session"];
 
+type UserData = {
+  name: string;
+  streak: number;
+  level_completed: number;
+};
+
+export const fetchUserData = async (uuid: string): Promise<UserData> => {
+  const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/user/${uuid}`;
+
+  console.log("Fetching user data from:", apiUrl);
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch user data: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+    console.log("Fetched user data:", data);
+    return data;
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    throw error;
+  }
+};
+
 export const updateUserInBackend = async (
   session: NonNullable<SessionType>
 ) => {
