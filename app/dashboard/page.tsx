@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { setupAudioStorage } from "@/utils/setupStorage";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useSession } from "@clerk/nextjs";
+import { updateUserInBackend } from "@/utils/userApi";
 import Link from "next/link";
 import Level from "./components/Level";
 import { BsFillShieldFill, BsHeartFill } from "react-icons/bs";
@@ -12,11 +13,13 @@ import { FaXmark } from "react-icons/fa6";
 import { AudioRecorder } from "@/components/AudioRecorder";
 
 export default function Dashboard() {
+  const { session, isLoaded, isSignedIn } = useSession();
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [userUpdateAttempted, setUserUpdateAttempted] = useState(false);
 
   useEffect(() => {
     setupAudioStorage().then(({ success, error }) => {
@@ -26,18 +29,76 @@ export default function Dashboard() {
     });
   }, []);
 
-  return (
-    isRecording ? <main className="w-screen h-screen bg-[#EAEAEA] flex items-center justify-center">
+  useEffect(() => {
+    const updateUser = async () => {
+      console.log("Dashboard state:", {
+        isLoaded,
+        isSignedIn,
+        hasSession: !!session,
+      });
+
+      if (!isLoaded) {
+        console.log("Clerk is still loading...");
+        return;
+      }
+
+      if (!isSignedIn) {
+        console.log("User is not signed in");
+        return;
+      }
+
+      if (!session) {
+        console.log("No session available");
+        return;
+      }
+
+      if (userUpdateAttempted) {
+        console.log("User update already attempted");
+        return;
+      }
+
+      try {
+        console.log("Attempting to update user with session ID:", session.id);
+        const response = await updateUserInBackend(session);
+        console.log("User update successful:", response);
+        setUserUpdateAttempted(true);
+      } catch (error) {
+        console.error("Failed to update user:", error);
+      }
+    };
+
+    updateUser();
+  }, [session, isLoaded, isSignedIn, userUpdateAttempted]);
+
+  const userName =
+    session?.user?.fullName ||
+    `${session?.user?.firstName || ""} ${
+      session?.user?.lastName || ""
+    }`.trim() ||
+    "User";
+
+  return isRecording ? (
+    <main className="w-screen h-screen bg-[#EAEAEA] flex items-center justify-center">
       <div className="w-[160px] h-[160px] rounded-full bg-gradient-to-tr from-primary to-secondary animate-gradient shadow-[0_0_300px] shadow-primary" />
       <div className="fixed bottom-[100px] left-0 right-0">
-
-        <AudioRecorder isUploading={isUploading} setIsUploading={setIsUploading} error={error} setError={setError} isRecording={isRecording} mediaRecorderRef={mediaRecorderRef} audioChunksRef={audioChunksRef} setIsRecording={setIsRecording} />
+        <AudioRecorder
+          isUploading={isUploading}
+          setIsUploading={setIsUploading}
+          error={error}
+          setError={setError}
+          isRecording={isRecording}
+          mediaRecorderRef={mediaRecorderRef}
+          audioChunksRef={audioChunksRef}
+          setIsRecording={setIsRecording}
+        />
       </div>
-    </main> : <div className="w-screen h-screen px-[32px] py-[36px] bg-white font-display">
+    </main>
+  ) : (
+    <div className="w-screen h-screen px-[32px] py-[36px] bg-white font-display">
       <div className="w-full flex items-center justify-between">
         <div className="flex flex-col">
           <h3 className="text-base text-gray-600 font-medium">Hello</h3>
-          <h1 className="text-[32px] font-semibold -mt-2">Marban</h1>
+          <h1 className="text-[32px] font-semibold -mt-2">{userName}</h1>
         </div>
         <UserButton />
       </div>
@@ -45,21 +106,20 @@ export default function Dashboard() {
       <div className="mt-6 rounded-2xl flex flex-col bg-orange-500 px-[18px] py-[16px]">
         <div className="flex items-center gap-2">
           <HiFire className="h-6 w-6 text-white" />
-          <span className="text-2xl font-bold text-white font-expand">
-            12
-          </span>
+          <span className="text-2xl font-bold text-white font-expand">12</span>
         </div>
         <div className="mt-4 flex justify-between font-expand relative">
           <div className="bg-white rounded-full w-full absolute h-2 m-1" />
           {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
             <div key={i} className="flex flex-col items-center">
               <div
-                className={`h-4 w-4 z-10 rounded-full mb-2 text-[10px] flex items-center justify-center ${i < 4 && i != 2
-                  ? "bg-progress-yellow"
-                  : i < 4
+                className={`h-4 w-4 z-10 rounded-full mb-2 text-[10px] flex items-center justify-center ${
+                  i < 4 && i != 2
+                    ? "bg-progress-yellow"
+                    : i < 4
                     ? "bg-white"
                     : "bg-white/0"
-                  }`}
+                }`}
               >
                 {i < 4 && i != 2 ? (
                   <FaCheck className="text-white" />
@@ -68,10 +128,11 @@ export default function Dashboard() {
                 ) : null}
               </div>
               <span
-                className={`text-[10px] font-semibold ${i == 3
-                  ? "bg-white rounded-full w-4 flex items-center justify-center h-4 text-orange"
-                  : "text-white/70"
-                  }`}
+                className={`text-[10px] font-semibold ${
+                  i == 3
+                    ? "bg-white rounded-full w-4 flex items-center justify-center h-4 text-orange"
+                    : "text-white/70"
+                }`}
               >
                 {day}
               </span>
@@ -132,7 +193,16 @@ export default function Dashboard() {
         <div className="w-full h-full relative flex justify-center pb-[36px] pt-[50px]">
           <div className="absolute top-2 w-8 h-1 rounded-full bg-grey" />
           <div className="flex flex-col gap-[22px] items-center justify-center">
-            <AudioRecorder isUploading={isUploading} setIsUploading={setIsUploading} error={error} setError={setError} isRecording={isRecording} mediaRecorderRef={mediaRecorderRef} audioChunksRef={audioChunksRef} setIsRecording={setIsRecording} />
+            <AudioRecorder
+              isUploading={isUploading}
+              setIsUploading={setIsUploading}
+              error={error}
+              setError={setError}
+              isRecording={isRecording}
+              mediaRecorderRef={mediaRecorderRef}
+              audioChunksRef={audioChunksRef}
+              setIsRecording={setIsRecording}
+            />
 
             <Link
               href="/history"
