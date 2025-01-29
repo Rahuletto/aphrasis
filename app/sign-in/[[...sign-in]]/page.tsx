@@ -18,7 +18,9 @@ export default function SignInPage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 uuid: id,
-                name: `${user.firstName} ${user.lastName}`.trim(),
+                name:
+                  user.fullName ||
+                  `${user.firstName || ""} ${user.lastName || ""}`.trim(),
                 email: user.emailAddresses[0]?.emailAddress,
               }),
             }
