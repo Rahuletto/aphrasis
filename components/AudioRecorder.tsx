@@ -1,9 +1,13 @@
 "use client";
 import { useState, useRef } from "react";
 import { createClient } from "@/utils/supabase";
+import { BsSoundwave } from "react-icons/bs";
+import { BiStop } from "react-icons/bi";
 
-export function AudioRecorder() {
-  const [isRecording, setIsRecording] = useState(false);
+export function AudioRecorder({ isRecording, setIsRecording }: {
+  isRecording: boolean
+  setIsRecording: React.Dispatch<React.SetStateAction<boolean>>
+}) {
   const [error, setError] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -18,7 +22,7 @@ export function AudioRecorder() {
       const filename = `recording-${Date.now()}.wav`;
 
       // Upload the file to Supabase storage
-      const { data, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("audio_files")
         .upload(filename, audioBlob, {
           contentType: "audio/wav",
@@ -62,9 +66,9 @@ export function AudioRecorder() {
           type: "audio/wav",
         });
         try {
-          const publicUrl = await uploadToSupabase(audioBlob);
+          await uploadToSupabase(audioBlob);
           setError(""); // Clear any previous errors
-        } catch (err) {
+        } catch {
           // Error handling is done in uploadToSupabase
         }
       };
@@ -95,19 +99,10 @@ export function AudioRecorder() {
       <button
         onClick={isRecording ? stopRecording : startRecording}
         disabled={isUploading}
-        className={`px-6 py-3 rounded-full font-medium transition-colors ${
-          isRecording
-            ? "bg-red-500 hover:bg-red-600 text-white"
-            : "bg-blue-500 hover:bg-blue-600 text-white"
-        } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`${isRecording ? "h-12 w-12" : "h-18 w-18"} rounded-[30px] ${isUploading ? "opacity-50 cursor-not-allowed" : ""} bg-red text-white flex items-center justify-center`}
       >
-        {isUploading
-          ? "Uploading..."
-          : isRecording
-          ? "Stop Recording"
-          : "Start Recording"}
+        {isRecording ? <BiStop className="text-3xl" /> : <BsSoundwave className="text-4xl" />}
       </button>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
   );
 }

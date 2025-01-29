@@ -39,6 +39,10 @@
 }
 
 
+.animate-gradient {
+  animation: gradient 2s ease-in-out infinite;
+}
+
 :root {
 
   --background: #ffffff;
@@ -69,6 +73,15 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+  }
+}
+
+@keyframes gradient {
+	0% {
+    rotate: 0deg
+  }
+  100% {
+    rotate: 360deg;
   }
 }
 
