@@ -2,6 +2,13 @@
 import { useEffect } from "react";
 import { setupAudioStorage } from "@/utils/setupStorage";
 import { UserButton } from "@clerk/nextjs";
+import Link from "next/link";
+import Level from "./components/Level";
+import { BsFillShieldFill, BsHeartFill, BsSoundwave } from "react-icons/bs";
+import { BiHistory } from "react-icons/bi";
+import { HiFire } from "react-icons/hi2";
+import { FaCheck } from "react-icons/fa";
+import { FaXmark } from "react-icons/fa6"
 
 export default function Dashboard() {
   useEffect(() => {
@@ -13,121 +20,88 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-md mx-auto p-8 space-y-8">
-        {/* Header with User Info */}
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-[var(--text-secondary)]">Hello</p>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-              Marban
-            </h1>
+    <div className="w-screen h-screen px-[32px] py-[36px] bg-white font-display">
+      <div className="w-full flex items-center justify-between">
+        <div className="flex flex-col">
+          <h3 className="text-base text-gray-600 font-medium">Hello</h3>
+          <h1 className="text-[32px] font-semibold -mt-2">Marban</h1>
+        </div>
+        <UserButton />
+      </div>
+
+      {/* Streak Section */}
+      <div className="mt-6 rounded-2xl flex flex-col bg-orange-500 px-[18px] py-[16px]">
+        <div className="flex items-center gap-2">
+          <HiFire className="h-6 w-6 text-white" />
+          <span className="text-2xl font-bold text-white font-expand">12</span>
+        </div>
+        <div className="mt-4 flex justify-between font-expand relative">
+          <div className="bg-white rounded-full w-full absolute h-2 m-1" />
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+            <div key={i} className="flex flex-col items-center">
+              <div className={`h-4 w-4 z-10 rounded-full mb-2 text-[10px] flex items-center justify-center ${i < 4 && i != 2 ? "bg-progress-yellow" : i < 4 ? 'bg-white' : 'bg-white/0'}`}>
+                {i < 4 && i != 2 ? <FaCheck className="text-white" /> : i < 4 ? <FaXmark className="text-orange" /> : null}
+              </div>
+              <span className={`text-[10px] font-semibold ${i == 3 ? "bg-white rounded-full w-4 flex items-center justify-center h-4 text-orange" : "text-white/70"}`}>{day}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">Progress</h2>
+        <div className="flex items-center gap-4 mb-4 relative">
+          <div className="w-full absolute h-3 bg-gradient-to-r from-transparent via-primary to-transparent" />
+          <div className="flex items-center justify-between w-full px-4 z-10">
+            {
+              [
+                {
+                  level: 3, progress: "Done"
+                },
+                {
+                  level: 4, progress: "Now"
+                },
+                {
+                  level: 5, progress: "Future"
+                }
+              ].map((a, i) => (
+                <Level key={i} level={a.level} progress={a.progress} />
+              ))
+            }
           </div>
-          <UserButton />
+
+        </div>
+        <div className="flex items-center justify-center">
+          <Link href="/levels" className="px-4 py-1 rounded-full font-semibold bg-gray-100 text-gray-600 text-sm mx-auto">View all</Link>
         </div>
 
-        {/* Streak Counter */}
-        <div className="bg-[var(--orange)] rounded-xl p-4 text-[var(--text-white)]">
-          <div className="flex items-center gap-2 mb-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"
-              />
-            </svg>
-            <span className="text-xl font-bold">12</span>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">Power Ups</h2>
+        <div className="flex gap-4">
+          <div className="h-24 w-24 rounded-full bg-primary flex items-center justify-center flex-col gap-2">
+            <BsFillShieldFill className="text-white text-3xl" />
+            <span className="text-white font-expand font-semibold text-sm">Shield</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span>S</span>
-            <span>M</span>
-            <span>T</span>
-            <span>W</span>
-            <span>T</span>
-            <span>F</span>
-            <span>S</span>
+          <div className="h-24 w-24 rounded-full bg-orange flex items-center justify-center flex-col gap-2">
+            <BsHeartFill className="text-white text-3xl" />
+            <span className="text-white text-sm font-expand font-semibold">Heart</span>
           </div>
         </div>
+      </div>
 
-        {/* Progress Section */}
-        <div>
-          <h2 className="text-xl font-bold mb-4 text-[var(--text-primary)]">
-            Progress
-          </h2>
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-full bg-[var(--progress-yellow)] flex items-center justify-center text-[var(--text-white)] font-bold">
-              3
-            </div>
-            <div className="flex-1 h-1 mx-2 bg-[var(--progress-blue)]"></div>
-            <div className="w-12 h-12 rounded-full bg-[var(--progress-blue)] flex items-center justify-center text-[var(--text-white)] font-bold">
-              4
-            </div>
-            <div className="flex-1 h-1 mx-2 bg-[var(--progress-gray)]"></div>
-            <div className="w-12 h-12 rounded-full bg-[var(--progress-gray)] flex items-center justify-center text-[var(--text-white)] font-bold">
-              5
-            </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-[#EAEAEA] rounded-t-4xl">
+        <div className="w-full h-full relative flex justify-center pb-[36px] pt-[50px]">
+          <div className="absolute top-2 w-8 h-1 rounded-full bg-grey" />
+          <div className="flex flex-col gap-[22px] items-center justify-center">
+            <Link href="/record" className="h-18 w-18 rounded-[30px] bg-red text-white flex items-center justify-center">
+              <BsSoundwave className="text-4xl" />
+            </Link>
+            <Link href="/history" className="h-8 w-8 rounded-full bg-grey text-[#d9d9d9] flex items-center justify-center">
+              <BiHistory className="text-xl" />
+            </Link>
           </div>
-          <button className="text-[var(--text-secondary)] px-4 py-2 rounded-full bg-[var(--gray-100)] hover:bg-[var(--gray-200)] transition-colors">
-            View all
-          </button>
-        </div>
-
-        {/* Power Ups */}
-        <div>
-          <h2 className="text-xl font-bold mb-4 text-[var(--text-primary)]">
-            Power Ups
-          </h2>
-          <div className="flex gap-4">
-            <div className="w-16 h-16 rounded-full bg-[var(--shield-blue)] flex items-center justify-center text-[var(--text-white)] flex-col">
-              <span className="text-sm">Shield</span>
-            </div>
-            <div className="w-16 h-16 rounded-full bg-[var(--orange)] flex items-center justify-center text-[var(--text-white)] flex-col">
-              <span className="text-sm">Heart</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Audio Recorder */}
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[var(--orange)] flex items-center justify-center shadow-lg hover:bg-[var(--orange)]/90 transition-colors cursor-pointer">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-[var(--text-white)]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-              />
-            </svg>
-          </div>
-          <button className="w-10 h-10 rounded-full bg-[var(--text-primary)] flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-[var(--text-white)]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </button>
         </div>
       </div>
     </div>
