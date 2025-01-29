@@ -1,8 +1,38 @@
 "use client";
 
-import { SignIn } from "@clerk/nextjs";
+import { SignIn, useSession } from "@clerk/nextjs";
+import { useEffect } from "react";
 
 export default function SignInPage() {
+  const { session } = useSession();
+
+  useEffect(() => {
+    if (session) {
+      const { id, user } = session;
+      const updateUser = async () => {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API}/api/user`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                uuid: id,
+                name: `${user.firstName} ${user.lastName}`.trim(),
+                email: user.emailAddresses[0]?.emailAddress,
+              }),
+            }
+          );
+          if (!response.ok) console.error("Failed to update user in backend");
+        } catch (error) {
+          console.error("Error updating user:", error);
+        }
+      };
+
+      updateUser();
+    }
+  }, [session]);
+
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-white"
@@ -15,6 +45,7 @@ export default function SignInPage() {
             card: "shadow-xl",
           },
         }}
+        afterSignInUrl="/dashboard"
       />
     </div>
   );
