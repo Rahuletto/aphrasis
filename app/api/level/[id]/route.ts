@@ -4,12 +4,12 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(
   request: NextRequest,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  context: any
+  { params }: any
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const uuid = searchParams.get("uuid");
-    const levelId = context.params.id;
+    const levelId = params.id;
 
     if (!uuid) {
       return NextResponse.json({ error: "UUID is required" }, { status: 400 });
@@ -17,7 +17,6 @@ export async function GET(
 
     const supabase = createClient();
 
-    // First, verify the user exists and get their progress
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("level_completed")
