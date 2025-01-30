@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       return new Response(JSON.stringify({ error: transcript.error }), { status: 500 });
     }
 
-    return new Response(JSON.stringify({ data: transcript.text }));
+    return new Response(JSON.stringify({ data: transcript.text, url: body.data }));
   } catch (error) {
     console.error('Transcription error:', error);
     return new Response(JSON.stringify({ error: 'Transcription failed' }), { status: 500 });

@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase";
 import { BsSoundwave } from "react-icons/bs";
 import { BiStop } from "react-icons/bi";
 import { useRouter } from "next/navigation";
+import { encodeString } from "@/misc/encode";
 // import { useRouter } from "next/navigation";
 
 export function AudioRecorder({ isRecording, setIsRecording,
@@ -58,8 +59,7 @@ export function AudioRecorder({ isRecording, setIsRecording,
 
       const rres = await transcribeRes.json()
 
-      console.log(rres)
-      router.push("/result?text=" + rres.data)
+      router.push(`/result?text=${rres.data}&url=${encodeString(publicUrl)}`)
 
       return publicUrl;
     } catch (err) {
