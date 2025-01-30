@@ -1,7 +1,6 @@
 'use client'
 import Link from 'next/link'
 import React from 'react'
-import { FaLeftLong } from 'react-icons/fa6'
 import { useSearchParams } from 'next/navigation'
 import { decodeString } from '@/misc/encode'
 import { BiLeftArrowAlt } from 'react-icons/bi'
