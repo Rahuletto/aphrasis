@@ -23,7 +23,6 @@ export default function ClientLayout({
   return (
     <ClerkProvider
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      debug={true}
     >
       <main>{children}</main>
     </ClerkProvider>

@@ -3,11 +3,12 @@ import { createClient } from "@/utils/supabase";
 import { BsSoundwave } from "react-icons/bs";
 import { BiStop } from "react-icons/bi";
 import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 export function AudioRecorder({ isRecording, setIsRecording,
   mediaRecorderRef, audioChunksRef,
   isUploading, setIsUploading,
-  error, setError,
+   setError,
  }: {
   isRecording: boolean
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>
@@ -18,7 +19,6 @@ export function AudioRecorder({ isRecording, setIsRecording,
   error: string
   setError: React.Dispatch<React.SetStateAction<string>>
 }) {
-  
   const router = useRouter();
 
   const uploadToSupabase = async (audioBlob: Blob) => {
@@ -47,7 +47,20 @@ export function AudioRecorder({ isRecording, setIsRecording,
       } = supabase.storage.from("audio_files").getPublicUrl(filename);
 
       console.log("File uploaded successfully:", publicUrl);
-      router.push("/result")
+
+      const transcribeRes = await fetch("/api/whisper", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ data: publicUrl }),
+      });
+
+      const rres = await transcribeRes.json()
+
+      console.log(rres)
+      router.push("/result?text=" + rres.data)
+
       return publicUrl;
     } catch (err) {
       console.error("Error uploading file:", err);
