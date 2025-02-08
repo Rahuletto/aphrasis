@@ -1,17 +1,23 @@
 "use client";
-import { useState, useRef } from "react";
 import { createClient } from "@/utils/supabase";
 import { BsSoundwave } from "react-icons/bs";
 import { BiStop } from "react-icons/bi";
 
-export function AudioRecorder({ isRecording, setIsRecording }: {
+export function AudioRecorder({ isRecording, setIsRecording,
+  mediaRecorderRef, audioChunksRef,
+  isUploading, setIsUploading,
+  error, setError,
+ }: {
   isRecording: boolean
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>
+  mediaRecorderRef: React.RefObject<MediaRecorder | null>
+  audioChunksRef: React.RefObject<BlobPart[]>
+  isUploading: boolean
+  setIsUploading: React.Dispatch<React.SetStateAction<boolean>>
+  error: string
+  setError: React.Dispatch<React.SetStateAction<string>>
 }) {
-  const [error, setError] = useState<string>("");
-  const [isUploading, setIsUploading] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  
 
   const uploadToSupabase = async (audioBlob: Blob) => {
     try {

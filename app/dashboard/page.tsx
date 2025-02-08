@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { setupAudioStorage } from "@/utils/setupStorage";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
@@ -13,6 +13,10 @@ import { AudioRecorder } from "@/components/AudioRecorder";
 
 export default function Dashboard() {
   const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     setupAudioStorage().then(({ success, error }) => {
@@ -27,7 +31,7 @@ export default function Dashboard() {
       <div className="w-[160px] h-[160px] rounded-full bg-gradient-to-tr from-primary to-secondary animate-gradient shadow-[0_0_300px] shadow-primary" />
       <div className="fixed bottom-[100px] left-0 right-0">
 
-            <AudioRecorder isRecording={isRecording} setIsRecording={setIsRecording} />
+        <AudioRecorder isUploading={isUploading} setIsUploading={setIsUploading} error={error} setError={setError} isRecording={isRecording} mediaRecorderRef={mediaRecorderRef} audioChunksRef={audioChunksRef} setIsRecording={setIsRecording} />
       </div>
     </main> : <div className="w-screen h-screen px-[32px] py-[36px] bg-white font-display">
       <div className="w-full flex items-center justify-between">
@@ -128,10 +132,7 @@ export default function Dashboard() {
         <div className="w-full h-full relative flex justify-center pb-[36px] pt-[50px]">
           <div className="absolute top-2 w-8 h-1 rounded-full bg-grey" />
           <div className="flex flex-col gap-[22px] items-center justify-center">
-            <AudioRecorder
-              isRecording={isRecording}
-              setIsRecording={setIsRecording}
-            />
+            <AudioRecorder isUploading={isUploading} setIsUploading={setIsUploading} error={error} setError={setError} isRecording={isRecording} mediaRecorderRef={mediaRecorderRef} audioChunksRef={audioChunksRef} setIsRecording={setIsRecording} />
 
             <Link
               href="/history"
