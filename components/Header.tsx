@@ -5,9 +5,10 @@ export default function Header() {
   return (
     <header className="border-b bg-white">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="font-semibold text-lg text-black">
+        <Link href="/" className="font-semibold text-lg text-black hidden sm:block">
           Your App
         </Link>
+        <div className="sm:hidden w-4"></div>
 
         <div>
           <SignedIn>
@@ -23,7 +24,7 @@ export default function Header() {
               </Link>
               <Link
                 href="/sign-up"
-                className="text-sm font-medium bg-slate-800  px-4 py-2 rounded-lg hover:bg-slate-900"
+                className="text-sm font-medium bg-slate-800 px-4 py-2 rounded-lg hover:bg-slate-900 text-white"
               >
                 Sign up
               </Link>
