@@ -8,7 +8,7 @@ export default function Levels() {
                 <h1 className='text-2xl font-bold text-white'>Level 4</h1>
                 <p className='opacity-70 text-white font-semibold'>Let&apos;s practice basic words</p>
             </div>
-            <div className='mt-12 px-12 flex flex-col gap-8 relative'>
+            <div className='mt-12 px-12 flex flex-col gap-4 relative'>
                 <div className='bg-primary w-2 h-full ml-7 z-0 absolute' />
                 <Level
                     level={1}
