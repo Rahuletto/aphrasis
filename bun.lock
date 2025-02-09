@@ -5,6 +5,7 @@
       "name": "aphrasis",
       "dependencies": {
         "@clerk/nextjs": "^6.10.3",
+        "@clerk/types": "^4.44.1",
         "@serwist/next": "^9.0.11",
         "@supabase/ssr": "^0.5.2",
         "@supabase/supabase-js": "^2.48.1",
