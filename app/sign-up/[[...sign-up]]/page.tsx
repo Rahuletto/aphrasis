@@ -15,31 +15,7 @@ export default function SignUpPage() {
             card: "shadow-xl",
           },
         }}
-        afterSignUpUrl="/dashboard"
-        afterSignUp={async (user) => {
-          try {
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API}/api/user`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  uuid: user.createdUserId,
-                  name: `${user.firstName} ${user.lastName}`.trim(),
-                  email: user.emailAddress,
-                }),
-              }
-            );
-
-            if (!response.ok) {
-              console.error("Failed to create user in backend");
-            }
-          } catch (error) {
-            console.error("Error creating user:", error);
-          }
-        }}
+        redirectUrl="/dashboard"
       />
     </div>
   );
