@@ -59,6 +59,9 @@ export default function Level() {
   const [similarityScore, setSimilarityScore] = useState<number | null>(null);
   const [levelData, setLevelData] = useState<LevelData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [micPermission, setMicPermission] = useState<
+    "granted" | "denied" | "prompt"
+  >("prompt");
   const targetPhrase = targetPhrases[id as keyof typeof targetPhrases] || "";
 
   useEffect(() => {
@@ -85,6 +88,23 @@ export default function Level() {
     fetchLevelData();
   }, [id, user?.id]);
 
+  useEffect(() => {
+    // Check microphone permission status on component mount
+    if (navigator.permissions) {
+      navigator.permissions
+        .query({ name: "microphone" as PermissionName })
+        .then((permissionStatus) => {
+          setMicPermission(permissionStatus.state);
+          permissionStatus.onchange = () => {
+            setMicPermission(permissionStatus.state);
+          };
+        })
+        .catch((err) => {
+          console.error("Error checking microphone permission:", err);
+        });
+    }
+  }, []);
+
   const calculateSimilarity = (str1: string, str2: string): number => {
     const words1 = str1.toLowerCase().split(" ");
     const words2 = str2.toLowerCase().split(" ");
@@ -92,14 +112,27 @@ export default function Level() {
     return ((commonWords.length * 2) / (words1.length + words2.length)) * 100;
   };
 
-  const startListening = () => {
-    if ("webkitSpeechRecognition" in window) {
+  const startListening = async () => {
+    try {
+      // First check if browser supports speech recognition
+      if (!("webkitSpeechRecognition" in window)) {
+        setError(
+          "Speech recognition is not supported in this browser. Please try Chrome or Edge."
+        );
+        return;
+      }
+
+      // Request microphone permission if not already granted
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop()); // Stop the stream immediately as we don't need it
+
       const recognition = new window.webkitSpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = false;
 
       recognition.onstart = () => {
         setIsListening(true);
+        setError(null); // Clear any previous errors
       };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -112,6 +145,21 @@ export default function Level() {
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
         setIsListening(false);
+        switch (event.error) {
+          case "no-speech":
+            setError("No speech was detected. Please try again.");
+            break;
+          case "audio-capture":
+            setError("No microphone was found or microphone is disabled.");
+            break;
+          case "not-allowed":
+            setError(
+              "Microphone permission was denied. Please enable it in your browser settings."
+            );
+            break;
+          default:
+            setError(`Error: ${event.error}`);
+        }
       };
 
       recognition.onend = () => {
@@ -119,8 +167,12 @@ export default function Level() {
       };
 
       recognition.start();
-    } else {
-      alert("Speech recognition is not supported in this browser.");
+    } catch (err) {
+      console.error("Error starting speech recognition:", err);
+      setIsListening(false);
+      setError(
+        "Could not access microphone. Please ensure microphone permissions are granted."
+      );
     }
   };
 
@@ -136,7 +188,15 @@ export default function Level() {
       </div>
 
       {error ? (
-        <div className="text-red-500">{error}</div>
+        <div className="text-red-500 text-center px-4 py-2 rounded-lg bg-red-50 mb-4">
+          {error}
+          {micPermission === "denied" && (
+            <p className="text-sm mt-2">
+              To enable your microphone: Click the camera icon in your browser's
+              address bar and allow microphone access.
+            </p>
+          )}
+        </div>
       ) : (
         <div className="flex flex-col gap-6 mt-8 items-center h-full justify-center">
           <div className="flex flex-col items-center justify-center">
