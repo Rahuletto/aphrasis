@@ -1,4 +1,5 @@
 import { useSession } from "@clerk/nextjs";
+import { createClient } from "./supabase";
 
 type SessionType = ReturnType<typeof useSession>["session"];
 
@@ -9,26 +10,26 @@ type UserData = {
 };
 
 export const fetchUserData = async (uuid: string): Promise<UserData> => {
-  const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/user/${uuid}`;
-
-  console.log("Fetching user data from:", apiUrl);
+  const supabase = createClient();
 
   try {
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-      },
-    });
+    // Get the current session
+    const {
+      data: { session },
+      error: authError,
+    } = await supabase.auth.getSession();
+    if (authError) throw authError;
+    if (!session) throw new Error("No active session");
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch user data: ${response.status} ${response.statusText}`
-      );
-    }
+    const { data, error } = await supabase
+      .from("users")
+      .select("name, streak, level_completed")
+      .eq("uuid", uuid)
+      .single();
 
-    const data = await response.json();
-    console.log("Fetched user data:", data);
+    if (error) throw error;
+    if (!data) throw new Error("User not found");
+
     return data;
   } catch (error) {
     console.error("Error fetching user data:", error);
@@ -39,52 +40,33 @@ export const fetchUserData = async (uuid: string): Promise<UserData> => {
 export const updateUserInBackend = async (
   session: NonNullable<SessionType>
 ) => {
-  const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/user`;
-
-  // Simplify the payload to match exactly what the endpoint expects
-  const payload = {
-    uuid: session.id,
-    name:
-      session.user.fullName ||
-      `${session.user.firstName || ""} ${session.user.lastName || ""}`.trim(),
-  };
-
-  console.log("Making request to:", apiUrl);
-  console.log("With payload:", payload);
+  const supabase = createClient();
 
   try {
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    // Get the current session
+    const {
+      data: { session: supabaseSession },
+      error: authError,
+    } = await supabase.auth.getSession();
+    if (authError) throw authError;
+    if (!supabaseSession) throw new Error("No active session");
 
-    console.log("Response status:", response.status);
-    console.log("Response status text:", response.statusText);
+    const payload = {
+      uuid: session.id,
+      name:
+        session.user.fullName ||
+        `${session.user.firstName || ""} ${session.user.lastName || ""}`.trim(),
+    };
 
-    // Log raw response
-    const rawResponse = await response.text();
-    console.log("Raw response:", rawResponse);
+    const { data, error } = await supabase
+      .from("users")
+      .upsert(payload, { onConflict: "uuid" })
+      .select()
+      .single();
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to update user in backend: ${response.status} ${response.statusText}`
-      );
-    }
+    if (error) throw error;
+    if (!data) throw new Error("Failed to update user");
 
-    // Parse the response only if it's JSON
-    let data;
-    try {
-      data = JSON.parse(rawResponse);
-    } catch (e) {
-      console.log("Response was not JSON:", rawResponse);
-      throw new Error("Invalid JSON response from server");
-    }
-
-    console.log("Parsed response data:", data);
     return data;
   } catch (error) {
     console.error("Error updating user:", error);
