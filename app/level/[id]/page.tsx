@@ -2,11 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { BsSoundwave } from "react-icons/bs";
-import { useUser } from "@clerk/nextjs";
+import { useSession, useUser } from "@clerk/nextjs";
+import Link from "next/link";
 
-const targetPhrases = {
-  "4": "A quick fox jumped on a wall",
-};
 
 interface SpeechRecognitionEvent extends Event {
   results: {
@@ -54,6 +52,8 @@ interface LevelData {
 export default function Level() {
   const { id } = useParams();
   const { user } = useUser();
+  const { session } = useSession();
+
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [similarityScore, setSimilarityScore] = useState<number | null>(null);
@@ -62,7 +62,7 @@ export default function Level() {
   const [micPermission, setMicPermission] = useState<
     "granted" | "denied" | "prompt"
   >("prompt");
-  const targetPhrase = targetPhrases[id as keyof typeof targetPhrases] || "";
+  const targetPhrase = levelData?.sentence ?? ""
 
   useEffect(() => {
     const fetchLevelData = async () => {
@@ -138,8 +138,18 @@ export default function Level() {
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         setTranscript(transcript);
-        const score = calculateSimilarity(transcript, targetPhrase);
+        const score = calculateSimilarity(transcript.toLowerCase(), targetPhrase);
         setSimilarityScore(score);
+
+        fetch(`${process.env.NEXT_PUBLIC_API}/api/level_progress/${session?.user?.id}/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+                accuracy: score
+            }),
+            headers: {
+                "Content-Type": "application/json",
+            }
+        })
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -192,7 +202,7 @@ export default function Level() {
           {error}
           {micPermission === "denied" && (
             <p className="text-sm mt-2">
-              To enable your microphone: Click the camera icon in your browser's
+              To enable your microphone: Click the camera icon in your browser&apos;s
               address bar and allow microphone access.
             </p>
           )}
@@ -202,17 +212,30 @@ export default function Level() {
           <div className="flex flex-col items-center justify-center">
             <p className="opacity-60">Let&apos;s try this</p>
             <h2 className="text-3xl font-semibold text-center mx-12">
-              {levelData?.sentence || targetPhrase}
+              {targetPhrase}
             </h2>
           </div>
 
           <div className="flex items-center justify-center w-full absolute left-0 bottom-24">
             {similarityScore !== null ? (
-              <div className="px-5 py-3 rounded-full bg-red flex items-center gap-3 justify-between">
-                <span>Similarity:</span>
-                <span className="font-bold text-xl">
-                  {similarityScore.toFixed(1)}%
-                </span>
+              <div className="flex flex-col items-center gap-4">
+                <div className={`px-5 py-3 rounded-full ${similarityScore >= 50 ? 'bg-green-500' : 'bg-red'} flex items-center gap-3 justify-between`}>
+                  <span>Similarity:</span>
+                  <span className="font-bold text-xl">
+                    {similarityScore.toFixed(1)}%
+                  </span>
+                </div>
+                {similarityScore >= 50 && (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-green-500 font-semibold text-lg">Success! Well done!</p>
+                    <Link 
+                      href={`/level/${Number(id) + 1}`}
+                      className="px-6 py-2 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
+                    >
+                      Next Level
+                    </Link>
+                  </div>
+                )}
               </div>
             ) : (
               <button
