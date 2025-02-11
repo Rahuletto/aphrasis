@@ -115,6 +115,8 @@ export default function Dashboard() {
       <div className="w-[160px] h-[160px] rounded-full bg-gradient-to-tr from-primary to-secondary animate-gradient shadow-[0_0_300px] shadow-primary" />
       <div className="fixed bottom-[100px] left-0 right-0">
         <AudioRecorder
+            id={session?.user?.id || ""}
+
           isUploading={isUploading}
           setIsUploading={setIsUploading}
           error={error}
@@ -231,6 +233,7 @@ export default function Dashboard() {
           <div className="absolute top-2 w-8 h-1 rounded-full bg-grey" />
           <div className="flex flex-col gap-[22px] items-center justify-center">
             <AudioRecorder
+            id={session?.user?.id || ""}
               isUploading={isUploading}
               setIsUploading={setIsUploading}
               error={error}

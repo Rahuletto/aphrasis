@@ -4,6 +4,7 @@ import React from 'react'
 import { FaLeftLong } from 'react-icons/fa6'
 import { useSearchParams } from 'next/navigation'
 import { decodeString } from '@/misc/encode'
+import { BiLeftArrowAlt } from 'react-icons/bi'
 
 export default function Page() {
   const searchParams = useSearchParams()
@@ -20,7 +21,7 @@ export default function Page() {
           <audio src={url} controls className="w-[80%] max-w-[500px]" />
         </div>
       <div className=" w-full flex items-center justify-center left-0 right-0">
-        <Link href="/dashboard" className='text-white bg-grey p-3 rounded-full'><FaLeftLong /></Link>
+      <Link href="/dashboard" className='text-white bg-grey p-3 rounded-full'><BiLeftArrowAlt /></Link>
       </div>
     </main>
   )

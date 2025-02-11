@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const transcript = await client.transcripts.transcribe({
       audio: body.data,
       speaker_labels: true,
-      speech_model: 'nano',
+      speech_model: "best",
     });
 
     if (transcript.status === 'error') {

@@ -10,7 +10,9 @@ export function AudioRecorder({ isRecording, setIsRecording,
   mediaRecorderRef, audioChunksRef,
   isUploading, setIsUploading,
    setError,
+   id,
  }: {
+  id: string
   isRecording: boolean
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>
   mediaRecorderRef: React.RefObject<MediaRecorder | null>
@@ -58,8 +60,22 @@ export function AudioRecorder({ isRecording, setIsRecording,
       });
 
       const rres = await transcribeRes.json()
+      const transcription = rres.data
 
-      router.push(`/result?text=${rres.data}&url=${encodeString(publicUrl)}`)
+      // Save to history table
+      const { error: historyError } = await supabase
+        .from("history")
+        .insert({
+          file_name: filename,
+          transcription: transcription,
+          uuid: id
+        });
+
+      if (historyError) {
+        console.error("Error saving to history:", historyError);
+      }
+
+      router.push(`/result?text=${transcription}&url=${encodeString(publicUrl)}`)
 
       return publicUrl;
     } catch (err) {
