@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import React from 'react'
 import { FaLeftLong } from 'react-icons/fa6'
 
@@ -8,7 +9,7 @@ export default function page() {
             How are you
         </p>
       <div className="absolute bottom-[100px] w-full flex items-center justify-center left-0 right-0">
-        <button className='text-white bg-grey p-3 rounded-full'><FaLeftLong /></button>
+        <Link href="/dashboard" className='text-white bg-grey p-3 rounded-full'><FaLeftLong /></Link>
       </div>
     </main>
   )
