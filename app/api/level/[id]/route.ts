@@ -3,12 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const uuid = searchParams.get("uuid");
-    const levelId = params.id;
+    const levelId = context.params.id;
 
     if (!uuid) {
       return NextResponse.json({ error: "UUID is required" }, { status: 400 });
