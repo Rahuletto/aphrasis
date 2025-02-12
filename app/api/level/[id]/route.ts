@@ -47,7 +47,7 @@ export async function GET(
     }
 
     // Get user's progress for this specific level
-    const { data: progressData, error: progressError } = await supabase
+    const { data: progressData } = await supabase
       .from("level_progress")
       .select("accuracy, attempts")
       .eq("user_id", uuid)
