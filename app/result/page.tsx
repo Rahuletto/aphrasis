@@ -1,11 +1,11 @@
 'use client'
 import Link from 'next/link'
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { decodeString } from '@/misc/encode'
 import { BiLeftArrowAlt } from 'react-icons/bi'
 
-export default function Page() {
+function ResultContent() {
   const searchParams = useSearchParams()
   const text = searchParams.get('text')
   const encodedUrl = searchParams.get("url")
@@ -23,5 +23,13 @@ export default function Page() {
       <Link href="/dashboard" className='text-white bg-grey p-3 rounded-full'><BiLeftArrowAlt /></Link>
       </div>
     </main>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResultContent />
+    </Suspense>
   )
 }
